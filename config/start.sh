@@ -25,8 +25,8 @@ if [ "$1" = 'postgres' ]; then
 
 		# check password first so we can output the warning before postgres
 		# messes it up
-		if [ "$POSTGRES_PASSWORD" ]; then
-			pass="PASSWORD '$POSTGRES_PASSWORD'"
+		if [ "$DB_PASS" ]; then
+			pass="PASSWORD '$DB_PASS'"
 			authMethod=md5
 		else
 			# The - option suppresses leading tabs but *not* spaces. :)
@@ -38,7 +38,7 @@ if [ "$1" = 'postgres' ]; then
 				         Docker's default configuration, this is
 				         effectively any other container on the same
 				         system.
-				         Use "-e POSTGRES_PASSWORD=password" to set
+				         Use "-e DB_PASS=password" to set
 				         it in "docker run".
 				****************************************************
 			EOWARN
@@ -55,25 +55,25 @@ if [ "$1" = 'postgres' ]; then
 			-o "-c listen_addresses=''" \
 			-w start
 
-		: ${POSTGRES_USER:=postgres}
-		: ${POSTGRES_DB:=$POSTGRES_USER}
-		export POSTGRES_USER POSTGRES_DB
+		: ${DB_USER:=postgres}
+		: ${DB_NAME:=$DB_USER}
+		export DB_USER DB_NAME
 
-		if [ "$POSTGRES_DB" != 'postgres' ]; then
+		if [ "$DB_NAME" != 'postgres' ]; then
 			psql --username postgres <<-EOSQL
-				CREATE DATABASE "$POSTGRES_DB" ;
+				CREATE DATABASE "$DB_NAME" ;
 			EOSQL
 			echo
 		fi
 
-		if [ "$POSTGRES_USER" = 'postgres' ]; then
+		if [ "$DB_USER" = 'postgres' ]; then
 			op='ALTER'
 		else
 			op='CREATE'
 		fi
 
 		psql --username postgres <<-EOSQL
-			$op USER "$POSTGRES_USER" WITH SUPERUSER $pass ;
+			$op USER "$DB_USER" WITH SUPERUSER $pass ;
 		EOSQL
 		echo
 
@@ -81,7 +81,7 @@ if [ "$1" = 'postgres' ]; then
 		for f in /docker-entrypoint-initdb.d/*; do
 			case "$f" in
 				*.sh)  echo "$0: running $f"; . "$f" ;;
-				*.sql) echo "$0: running $f"; psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" < "$f" && echo ;;
+				*.sql) echo "$0: running $f"; psql --username "$DB_USER" --dbname "$DB_NAME" < "$f" && echo ;;
 				*)     echo "$0: ignoring $f" ;;
 			esac
 			echo

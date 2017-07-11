@@ -1,9 +1,6 @@
 # vim:set ft=dockerfile:
 FROM debian:jessie
 
-RUN nc -z w3 consul-io.node.cloud.consul 3142 && echo 'Acquire::http { Proxy "http://consul-io.node.cloud.consul:3142"; };' >> /etc/apt/apt.conf.d/01proxy || echo "not found proxy, skip"
-RUN echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf
-
 # explicitly set user/group IDs
 RUN groupadd -r postgres --gid=999 && useradd -r -g postgres --uid=999 postgres
 
@@ -51,10 +48,6 @@ ENV PGDATA /var/lib/postgresql/data
 ENV PGLOG /var/log/postgresql
 
 ENV PGEXTDATA /data/v8systemspace
-
-#VOLUME /var/lib/postgresql/data
-#VOLUME /var/log/postgresql
-#VOLUME /data/v8systemspace
 
 COPY config/start.sh /
 
